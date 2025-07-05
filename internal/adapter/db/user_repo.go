@@ -3,7 +3,9 @@ package db
 import (
 	"ExBot/internal/domain"
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -30,9 +32,18 @@ func (r *UserRepo) GetByTelegramID(ctx context.Context, tgID int64) (*domain.Use
 	u := &domain.User{}
 	err := r.pool.QueryRow(ctx, `
         SELECT
-            id, telegram_id, username, first_name, last_name,
-            real_name, email, age, city,
-            is_admin, created_at, approved_at
+            id,
+            telegram_id,
+            COALESCE(username, '') as username,
+            COALESCE(first_name, '') as first_name,
+            COALESCE(last_name, '') as last_name,
+            COALESCE(real_name, '') as real_name,
+            COALESCE(email, '') as email,
+            COALESCE(age, 0) as age,
+            COALESCE(city, '') as city,
+            is_admin,
+            created_at,
+            COALESCE(approved_at, NOW()) as approved_at
         FROM users
         WHERE telegram_id=$1
     `, tgID).Scan(
@@ -40,7 +51,13 @@ func (r *UserRepo) GetByTelegramID(ctx context.Context, tgID int64) (*domain.Use
 		&u.RealName, &u.Email, &u.Age, &u.City,
 		&u.IsAdmin, &u.CreatedAt, &u.ApprovedAt,
 	)
-	return u, err
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil // пользователь не найден
+		}
+		return nil, err // другая ошибка
+	}
+	return u, nil
 }
 
 // UpdateProfile: патч полей личного кабинета, остальные остаются.
@@ -67,7 +84,7 @@ func (r *UserRepo) Approve(ctx context.Context, tgID int64) error {
 	return err
 }
 
-func (r *UserRepo) SeedAdmin(ctx context.Context, adminID string) error {
+func (r *UserRepo) SeedAdmin(ctx context.Context, adminID int64) error {
 	if _, err := r.pool.Exec(ctx, `
             INSERT INTO users (telegram_id,is_admin,created_at)
             VALUES ($1,true,NOW())
