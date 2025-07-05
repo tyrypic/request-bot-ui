@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
@@ -85,6 +86,29 @@ func main() {
 	}
 	log.Println("✅ Администратор зарегистрирован")
 
+	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	if err != nil {
+		panic(err)
+	}
+
+	bot.Debug = true
+
+	updateConfig := tgbotapi.NewUpdate(0)
+	updateConfig.Timeout = 30
+
+	updates := bot.GetUpdatesChan(updateConfig)
+	for update := range updates {
+		if update.Message == nil {
+			continue
+		}
+
+		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
+		msg.ReplyToMessageID = update.Message.MessageID
+
+		if _, err := bot.Send(msg); err != nil {
+			panic(err)
+		}
+	}
 	// === Дальнейшие примеры использования ===
 
 	// 6. Пример регистрации/обновления Telegram-пользователя
