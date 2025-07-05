@@ -3,6 +3,7 @@ package usecase
 import (
 	"ExBot/internal/domain"
 	"ExBot/internal/port"
+	"ExBot/internal/texts"
 	"context"
 )
 
@@ -18,13 +19,13 @@ func NewMessageService(userSvc port.UserRepository, sender port.MessageRepositor
 func (s *MessageService) HandleStart(ctx context.Context, msg *domain.Message) error {
 	user, err := s.userSvc.GetByTelegramID(ctx, msg.UserID)
 	if err != nil {
-		msg.Text = "Ошибка при проверке пользователя"
+		msg.Text = texts.MsgUserCheckError
 	} else if user == nil {
-		msg.Text = "Вы не администратор."
-	} else if user.IsAdmin {
-		msg.Text = "Вы администратор!"
+		msg.Text = texts.MsgUserNotVerified
+	} else if user.IsApproved {
+		msg.Text = texts.MsgUserVerified
 	} else {
-		msg.Text = "Вы не администратор."
+		msg.Text = texts.MsgUserNotVerified
 	}
 	return s.sender.SendMessage(ctx, msg)
 }
