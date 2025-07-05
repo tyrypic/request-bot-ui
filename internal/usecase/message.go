@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"ExBot/internal/bot"
 	"ExBot/internal/domain"
 	"ExBot/internal/port"
 	"ExBot/internal/texts"
@@ -22,10 +23,12 @@ func (s *MessageService) HandleStart(ctx context.Context, msg *domain.Message) e
 		msg.Text = texts.MsgUserCheckError
 	} else if user == nil {
 		msg.Text = texts.MsgUserNotVerified
+		msg.Keyboard = bot.NewVerificationKeyboard()
 	} else if user.IsApproved {
 		msg.Text = texts.MsgUserVerified
 	} else {
 		msg.Text = texts.MsgUserNotVerified
+		msg.Keyboard = bot.NewVerificationKeyboard()
 	}
 	return s.sender.SendMessage(ctx, msg)
 }

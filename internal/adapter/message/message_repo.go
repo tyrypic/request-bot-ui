@@ -1,6 +1,7 @@
-package bot
+package message
 
 import (
+	"ExBot/internal/bot"
 	"ExBot/internal/domain"
 	"ExBot/internal/usecase"
 	"context"
@@ -19,6 +20,9 @@ func NewMessageRepo(bot *tgbotapi.BotAPI, messageSvc *usecase.MessageService) *M
 
 func (m *MessageRepo) SendMessage(ctx context.Context, msg *domain.Message) error {
 	tgMsg := tgbotapi.NewMessage(msg.ChatID, msg.Text)
+	if msg.Keyboard != nil {
+		tgMsg.ReplyMarkup = bot.ToTelegramMarkup(msg.Keyboard)
+	}
 	_, err := m.bot.Send(tgMsg)
 	return err
 }

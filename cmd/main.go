@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"ExBot/internal/adapter/bot"
 	"ExBot/internal/adapter/db"
+	message "ExBot/internal/adapter/message"
 	"ExBot/internal/appinit"
 	"ExBot/internal/texts"
 	"ExBot/internal/usecase"
@@ -69,10 +69,10 @@ func main() {
 	if err != nil {
 		log.Fatalf(texts.LogBotInitError, err)
 	}
-	// botAPI.Debug = true // включить для отладки
+	botAPI.Debug = true // включить для отладки
 
 	// 8. Инициализация репозиториев и сервисов сообщений
-	messageRepo := bot.NewMessageRepo(botAPI, nil) // временно nil, замыкаем зависимость ниже
+	messageRepo := message.NewMessageRepo(botAPI, nil) // временно nil, замыкаем зависимость ниже
 	messageSvc := usecase.NewMessageService(userRepo, messageRepo)
 	messageRepo.MessageSvc = messageSvc // связываем сервис с адаптером
 
