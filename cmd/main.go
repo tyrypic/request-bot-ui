@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 
+	"ExBot/internal/adapter/bot"
 	"ExBot/internal/adapter/db"
 	"ExBot/internal/usecase"
 
@@ -72,10 +74,10 @@ func main() {
 	runMigrations(dsn)
 
 	// 4. Сеем администраторов
-	adminID := os.Getenv("ADMIN_IDS")
-	if adminID == "" {
-		log.Fatalf("❌ Не обнаружен ADMIN_ID")
-		return
+	adminIDStr := os.Getenv("ADMIN_IDS")
+	adminID, err := strconv.ParseInt(adminIDStr, 10, 64)
+	if err != nil {
+		log.Fatalf("❌ ADMIN_ID не число: %v", err)
 	}
 	log.Printf("👑 ID Администратора: %v", adminID)
 
@@ -86,29 +88,21 @@ func main() {
 	}
 	log.Println("✅ Администратор зарегистрирован")
 
-	bot, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
+	botAPI, err := tgbotapi.NewBotAPI(os.Getenv("TELEGRAM_APITOKEN"))
 	if err != nil {
 		panic(err)
 	}
 
-	bot.Debug = true
+	// botAPI.Debug = true
 
-	updateConfig := tgbotapi.NewUpdate(0)
-	updateConfig.Timeout = 30
+	messageRepo := bot.NewMessageRepo(botAPI, nil) // временно nil
+	messageSvc := usecase.NewMessageService(userRepo, messageRepo)
+	messageRepo.MessageSvc = messageSvc // замыкаем зависимость
 
-	updates := bot.GetUpdatesChan(updateConfig)
-	for update := range updates {
-		if update.Message == nil {
-			continue
-		}
+	updates := botAPI.GetUpdatesChan(tgbotapi.NewUpdate(0))
+	go messageRepo.Listen(context.Background(), updates)
 
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, update.Message.Text)
-		msg.ReplyToMessageID = update.Message.MessageID
-
-		if _, err := bot.Send(msg); err != nil {
-			panic(err)
-		}
-	}
+	select {} // или другая логика main
 	// === Дальнейшие примеры использования ===
 
 	// 6. Пример регистрации/обновления Telegram-пользователя
