@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS users (
   age          INT          CHECK(age > 0),
   city         TEXT,
   is_admin     BOOLEAN      NOT NULL DEFAULT FALSE,
+  is_approved  BOOLEAN      NOT NULL DEFAULT FALSE,
   created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
   approved_at  TIMESTAMP
 );

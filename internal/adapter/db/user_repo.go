@@ -42,6 +42,7 @@ func (r *UserRepo) GetByTelegramID(ctx context.Context, tgID int64) (*domain.Use
             COALESCE(age, 0) as age,
             COALESCE(city, '') as city,
             is_admin,
+            is_approved,
             created_at,
             COALESCE(approved_at, NOW()) as approved_at
         FROM users
@@ -49,7 +50,7 @@ func (r *UserRepo) GetByTelegramID(ctx context.Context, tgID int64) (*domain.Use
     `, tgID).Scan(
 		&u.ID, &u.TelegramID, &u.Username, &u.FirstName, &u.LastName,
 		&u.RealName, &u.Email, &u.Age, &u.City,
-		&u.IsAdmin, &u.CreatedAt, &u.ApprovedAt,
+		&u.IsAdmin, &u.IsApproved, &u.CreatedAt, &u.ApprovedAt,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -86,8 +87,8 @@ func (r *UserRepo) Approve(ctx context.Context, tgID int64) error {
 
 func (r *UserRepo) SeedAdmin(ctx context.Context, adminID int64) error {
 	if _, err := r.pool.Exec(ctx, `
-            INSERT INTO users (telegram_id,is_admin,created_at)
-            VALUES ($1,true,NOW())
+            INSERT INTO users (telegram_id,is_admin,created_at, is_approved)
+            VALUES ($1,true,NOW(),true)
             ON CONFLICT (telegram_id) DO UPDATE
               SET is_admin = true
         `, adminID); err != nil {
