@@ -14,6 +14,7 @@ type User struct {
 	Age        int    // ЛК
 	City       string // ЛК
 	IsAdmin    bool
+	IsApproved bool
 	CreatedAt  time.Time
 	ApprovedAt *time.Time
 }
