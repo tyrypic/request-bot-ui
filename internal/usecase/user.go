@@ -14,7 +14,7 @@ func NewUserService(r port.UserRepository) *UserService {
 	return &UserService{repo: r}
 }
 
-func (s *UserService) SeedAdmin(ctx context.Context, adminID string) error {
+func (s *UserService) SeedAdmin(ctx context.Context, adminID int64) error {
 	return s.repo.SeedAdmin(ctx, adminID)
 }
 
@@ -30,6 +30,6 @@ func (s *UserService) Approve(ctx context.Context, tgID int64) error {
 	return s.repo.Approve(ctx, tgID)
 }
 
-func (s *UserService) Get(ctx context.Context, tgID int64) (*domain.User, error) {
+func (s *UserService) GetByTelegramID(ctx context.Context, tgID int64) (*domain.User, error) {
 	return s.repo.GetByTelegramID(ctx, tgID)
 }

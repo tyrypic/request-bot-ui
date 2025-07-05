@@ -11,5 +11,5 @@ type UserRepository interface {
 	GetByTelegramID(ctx context.Context, tgID int64) (*domain.User, error)
 	UpdateProfile(ctx context.Context, u *domain.User) error
 	Approve(ctx context.Context, tgID int64) error
-	SeedAdmin(ctx context.Context, adminID string) error
+	SeedAdmin(ctx context.Context, adminID int64) error
 }
