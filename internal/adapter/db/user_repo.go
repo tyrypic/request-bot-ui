@@ -90,7 +90,9 @@ func (r *UserRepo) SeedAdmin(ctx context.Context, adminID int64) error {
             INSERT INTO users (telegram_id,is_admin,created_at, is_approved)
             VALUES ($1,true,NOW(),true)
             ON CONFLICT (telegram_id) DO UPDATE
-              SET is_admin = true
+            SET
+              is_admin = TRUE,
+              is_approved = TRUE
         `, adminID); err != nil {
 		return err
 	}
